@@ -1,7 +1,18 @@
-import {stubCorral, stubRoster} from "../support/stubs";
+import {apiDateFormat, stubCorral, stubRoster} from "../support/stubs";
 import {deleteRoster, deleteToday, insertCorral, insertRoster} from "../support/apiHelpers";
 import {assertSaveDisabled, collectDutyIds} from "../page-objects/RosterPage";
 import {format} from "date-fns";
+
+function assertPioneersAndChoresAreAssignedToDuties(corral) {
+    corral.pioneers.forEach(pioneer => {
+        cy.get(`.duty-pioneer-name[data-pioneer-id=${pioneer.id}]`)
+            .should('to.exist');
+    });
+    corral.chores.forEach(chore => {
+        cy.get(`.duty-chore-name[data-chore-id=${chore.id}]`)
+            .should('to.exist');
+    });
+}
 
 context('On the Duty Roster Page', () => {
 
@@ -19,30 +30,29 @@ context('On the Duty Roster Page', () => {
         });
 
         it('shows all the corral contents', () => {
-            corral.pioneers.forEach(pioneer => {
-                cy.get(`.duty-pioneer-name[data-pioneer-id=${pioneer.id}]`)
-                    .should('to.exist');
-            });
-            corral.chores.forEach(chore => {
-                cy.get(`.duty-chore-name[data-chore-id=${chore.id}]`)
-                    .should('to.exist');
-            });
+            assertPioneersAndChoresAreAssignedToDuties(corral);
         });
 
-        it('creates a new roster when save is clicked', () => {
-            cy.get("#save").click();
+        describe('when save is clicked', () => {
+            beforeEach(() => {
+                cy.get("#save").click();
+            });
 
-            assertSaveDisabled();
-
-            cy.get('.duty').then(duty => {
-                const duties = collectDutyIds(duty);
-                cy.reload();
-
+            it('the saved roster persists', () => {
                 assertSaveDisabled();
 
-                expect(duties).to.deep.eq(collectDutyIds(duty));
+                cy.get('.duty').then(duty => {
+                    const duties = collectDutyIds(duty);
+                    cy.reload();
+
+                    assertSaveDisabled();
+
+                    expect(duties).to.deep.eq(collectDutyIds(duty));
+                });
             });
         });
+
+
     });
 
     describe('Given that a roster exists for the day', () => {
@@ -63,6 +73,44 @@ context('On the Duty Roster Page', () => {
                     .should('to.exist');
             });
         });
+    });
+
+    describe('when respinning over existing duty roster', () => {
+
+        let corral;
+        beforeEach(async () => {
+            await insertRoster({
+                date: format(new Date(), apiDateFormat),
+                duties: [{
+                    pioneer: {name: "Homeless Harry", id: "-1"},
+                    chore: {name: "Panhandling", description: "He handles the pan", id: "-2"},
+                    completed: false
+                }]
+            });
+            corral = stubCorral();
+            await insertCorral(corral)
+        });
+
+        beforeEach(() => {
+            cy.visit("http://localhost:8080/roster?spin=true");
+        });
+
+        it('will show the chores and pioneers from the corral', () => {
+            assertPioneersAndChoresAreAssignedToDuties(corral);
+        });
+
+        it('after save, will still continue to show the assigned duties', () => {
+            cy.get('.duty').then(duty => {
+                const duties = collectDutyIds(duty);
+
+                cy.get("#save").click();
+
+                cy.url().should('eq', 'http://localhost:8080/roster');
+                cy.get('.duty').then(afterSaveDuties => {
+                    expect(duties).to.deep.eq(collectDutyIds(afterSaveDuties));
+                })
+            });
+        })
     });
 
     describe('visiting specific duty roster', () => {

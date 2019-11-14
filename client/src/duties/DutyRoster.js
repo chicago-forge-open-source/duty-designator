@@ -44,6 +44,12 @@ function respinButton(history) {
     </Button>
 }
 
+async function onSaveClick(dutyRoster, setCanSave, history) {
+    await saveWithDate(dutyRoster);
+    setCanSave(false);
+    history.push('/roster');
+}
+
 function saveButton(setCanSave, dutyRoster, history) {
     return <Button
         color="primary"
@@ -51,17 +57,15 @@ function saveButton(setCanSave, dutyRoster, history) {
         variant="contained"
         id="save"
         onClick={() => {
-            saveWithDate(dutyRoster);
-            setCanSave(false);
-            history.push('/roster');
+            onSaveClick(dutyRoster, setCanSave, history);
         }}>
         Save this Wagon Wheel
     </Button>;
 }
 
-function saveWithDate(dutyRoster) {
+async function saveWithDate(dutyRoster) {
     const date = format(new Date(), 'yyyy-MM-dd');
-    FetchService.put(0, `/api/roster/${date}`, Object.assign(dutyRoster, {date}), undefined)
+    await FetchService.put(0, `/api/roster/${date}`, Object.assign(dutyRoster, {date}), undefined)
         .catch(err => console.error(err));
 }
 
