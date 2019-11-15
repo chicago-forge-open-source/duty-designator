@@ -35,7 +35,7 @@ export default function App() {
                     <Switch>
                         <Route exact path="/" component={Root}/>
                         <Route exact path="/corral" component={ChoreCorralPage}/>
-                        <Route exact path="/roster" component={DutyRosterPage}/>
+                        <Route exact path="/roster" render={props => <DutyRosterPage key={props.location.search}/>}/>
                         <Route path="/roster/:date"
                                render={props => <HistoricalRosterPage key={props.match.params.date}/>}
                         />

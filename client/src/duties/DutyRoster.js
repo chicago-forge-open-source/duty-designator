@@ -7,16 +7,20 @@ import DutyGrid from "./DutyGrid";
 
 export default function DutyRoster(props) {
     const [canSave, setCanSave] = useState(props.dutyRoster === null);
+    const [saving, setSaving] = useState(false);
     const pioneers = props.pioneers || [];
     const chores = props.chores || [];
     const dutyRoster = props.dutyRoster || associator(pioneers, chores);
     const history = props.history;
-
+    
     return <Container className="results" maxWidth={"xl"}>
         <DutyGrid duties={dutyRoster["duties"]}/>
         <br/>
-        {respinButton(history)}
-        {conditionalButtons(canSave, setCanSave, dutyRoster, history)}
+        {!saving ?
+            <div>
+                {respinButton(history)}
+                {conditionalButtons(canSave, setCanSave, dutyRoster, history, setSaving)}
+            </div> : undefined}
     </Container>;
 }
 
@@ -24,9 +28,9 @@ const associator = (pioneers, chores) => {
     return {duties: associateWithOffset(pioneers, chores, Date.now())}
 };
 
-function conditionalButtons(canSave, setCanSave, dutyRoster, history) {
+function conditionalButtons(canSave, setCanSave, dutyRoster, history, setSaving) {
     return canSave
-        ? saveButton(setCanSave, dutyRoster, history)
+        ? saveButton(setCanSave, dutyRoster, history, setSaving)
         : <Typography id='saved-confirmation' variant="body2" color='textPrimary'>
             Save Confirmed!
         </Typography>;
@@ -44,24 +48,30 @@ function respinButton(history) {
     </Button>
 }
 
-function saveButton(setCanSave, dutyRoster, history) {
+async function onSaveClick(dutyRoster, setCanSave, history, setSaving) {
+    setSaving(true)
+    await saveWithDate(dutyRoster);
+    setCanSave(false);
+    history.push('/roster');
+    setSaving(false)
+}
+
+function saveButton(setCanSave, dutyRoster, history, setSaving) {
     return <Button
         color="primary"
         size="large"
         variant="contained"
         id="save"
         onClick={() => {
-            saveWithDate(dutyRoster);
-            setCanSave(false);
-            history.push('/roster');
+            onSaveClick(dutyRoster, setCanSave, history, setSaving);
         }}>
         Save this Wagon Wheel
     </Button>;
 }
 
-function saveWithDate(dutyRoster) {
+async function saveWithDate(dutyRoster) {
     const date = format(new Date(), 'yyyy-MM-dd');
-    FetchService.put(0, `/api/roster/${date}`, Object.assign(dutyRoster, {date}), undefined)
+    await FetchService.put(0, `/api/roster/${date}`, Object.assign(dutyRoster, {date}), undefined)
         .catch(err => console.error(err));
 }
 

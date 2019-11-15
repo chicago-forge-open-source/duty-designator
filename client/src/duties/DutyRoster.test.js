@@ -4,7 +4,8 @@ import DutyRoster from "./DutyRoster";
 import DutyGrid from "./DutyGrid";
 import {format} from 'date-fns';
 import FetchService from "../utilities/services/fetchService";
-import {wrapInPromise} from "../utilities/testUtils";
+import {waitUntil, wrapInPromise} from "../utilities/testUtils";
+import {Button} from "@material-ui/core";
 
 describe('DutyRoster', function () {
     let fetchMock;
@@ -72,4 +73,22 @@ describe('DutyRoster', function () {
         expect(pushSpy.mock.calls.length).toBe(1);
         expect(pushSpy.mock.calls[0][0]).toEqual('/corral');
     });
+
+    test('during save all buttons are not shown', async () => {
+        let promiseResolve;
+        fetchMock.mockReturnValue(new Promise((resolve, reject) => {
+            promiseResolve = resolve;
+        }));
+        const pushSpy = jest.fn();
+        const dutyRoster = shallow(<DutyRoster dutyRoster={null} history={{push: pushSpy}}/>);
+
+        dutyRoster.find('#save').simulate('click');
+        expect(dutyRoster.find(Button).length).toBe(0);
+
+        promiseResolve();
+
+        await waitUntil(() => dutyRoster.update() && dutyRoster.find(Button).length > 0);
+
+        expect(dutyRoster.find(Button).length).toBe(1);
+    })
 });
