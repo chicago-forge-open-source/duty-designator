@@ -58,7 +58,7 @@ jobs:
             - "*"
   build-docker:
     docker:
-      - image: openjdk:8-jdk
+      - image: docker:latest
     steps:
       - attach_workspace:
           at: ./
