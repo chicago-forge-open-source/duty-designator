@@ -62,10 +62,9 @@ jobs:
             mv /tmp/docker/* /usr/bin
       - run: |
           TAG=latest
-          docker build -t :$TAG .     
-          docker login -u $DOCKER_USER -p $DOCKER_PASS         # (4)
-          docker push CircleCI-Public/circleci-demo-docker:$TAG
-
+          docker build -t riordanx0/duty-designator:$TAG .     
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push riordanx0/duty-designator:$TAG
 
 workflows:
   version: 2
