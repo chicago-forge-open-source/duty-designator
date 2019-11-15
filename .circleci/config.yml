@@ -76,8 +76,8 @@ workflows:
     jobs:
       - build
       - build-docker:
-	requires:
-	 - build
-	filters:
-          branches:
-            only: dockerizing
+          requires:
+            - build
+          filters:
+            branches:
+              only: dockerizing
