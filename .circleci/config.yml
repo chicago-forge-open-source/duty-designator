@@ -52,16 +52,18 @@ jobs:
       - store_artifacts:
           destination: e2e-screenshots
           path: e2e/cypress/screenshots
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - "*"
+  build-docker:
+    docker:
+      - image: openjdk:8-jdk
+    steps:
+      - attach_workspace:
+          at: ./
       - setup_remote_docker:
           docker_layer_caching:
-      - run:
-          name: Install Docker client
-          command: |
-            set -x
-            VER="18.06.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
       - run: |
           TAG=latest
           docker build -t riordanx0/duty-designator:$TAG .     
@@ -73,3 +75,9 @@ workflows:
   build_and_test:
     jobs:
       - build
+      - build-docker:
+	requires:
+	 - build
+	filters:
+          branches:
+            only: dockerizing
