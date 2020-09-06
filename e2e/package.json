@@ -5,7 +5,7 @@
     "date-fns": "^2.6.0",
     "mocha": "^6.2.1",
     "mocha-junit-reporter": "^1.23.1",
-    "tree-kill": "^1.2.1",
+    "tree-kill": "^1.2.2",
     "uuid": "^3.3.3"
   },
   "scripts": {
